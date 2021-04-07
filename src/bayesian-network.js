@@ -1,8 +1,15 @@
 const fs = require('fs');
+const { BayesianNode } = require('./bayesian-node');
 
+/**
+ * BayesianNetwork is an implementation of a bayesian network capable of randomly sampling from the distribution
+ * represented by the network.
+ */
 class BayesianNetwork {
-    constructor(networkDefinitionFilePath) {
-        const networkDefinition = JSON.parse(fs.readFileSync(networkDefinitionFilePath, 'utf8'));
+    /**
+     * @param {object} networkDefinition - object defining the network structure and distributions
+     */
+    constructor(networkDefinition) {
         this.nodesInSamplingOrder = networkDefinition.nodes.map((nodeDefinition) => new BayesianNode(nodeDefinition));
         this.nodesByName = {};
         for (const node of this.nodesInSamplingOrder) {
@@ -10,16 +17,11 @@ class BayesianNetwork {
         }
     }
 
-    async setProbabilitiesAccordingToData(dataframe) {
-        this.nodesInSamplingOrder.forEach((node) => {
-            const possibleParentValues = {};
-            for (const parentName of node.parentNames) {
-                possibleParentValues[parentName] = this.nodesByName[parentName].possibleValues;
-            }
-            node.setProbabilitiesAccordingToData(dataframe, possibleParentValues);
-        });
-    }
-
+    /**
+     * Randomly samples from the distribution represented by the bayesian network.
+     * Can generate samples not found in the data used to create the definition file.
+     * @param {object} inputValues - node values that are known already
+     */
     generateSample(inputValues = {}) {
         const sample = inputValues;
         for (const node of this.nodesInSamplingOrder) {
@@ -31,21 +33,37 @@ class BayesianNetwork {
         return sample;
     }
 
-    generateSampleWheneverPossible(valuePossibilities) {
-        return this._recursivelyGenerateSampleWheneverPossible({}, valuePossibilities, 0);
+    /**
+     * Randomly samples from the distribution represented by the bayesian network.
+     * Cannot generate samples not found in the data used to create the definition file,
+     * so it only generates samples when it is possible to be consistent with the data.
+     * @param {object} valuePossibilities - a dictionary of lists of possible values for nodes
+     *                                      (if a node isn't present in the dictionary, all values are possible)
+     */
+    generateConsistentSampleWhenPossible(valuePossibilities) {
+        return this._recursivelyGenerateConsistentSampleWhenPossible({}, valuePossibilities, 0);
     }
 
-    _recursivelyGenerateSampleWheneverPossible(sampleSoFar, valuePossibilities, depth) {
+    /**
+     * Randomly samples from the distribution represented by the bayesian network
+     * @param {object} sampleSoFar - node values that are known already
+     * @param {object} valuePossibilities - a dictionary of lists of possible values for nodes
+     *                                      (if a node isn't present in the dictionary, all values are possible)
+     * @param {number} depth - in what depth of the recursion this function call is,
+     *                         specifies what node this function call is sampling
+     * @private
+     */
+    _recursivelyGenerateConsistentSampleWhenPossible(sampleSoFar, valuePossibilities, depth) {
         const bannedValues = [];
         const node = this.nodesInSamplingOrder[depth];
 
         let sampleValue;
         let sample;
-        while ((sampleValue = node.sampleAccordingToRestrictions(sampleSoFar, valuePossibilities, bannedValues))) {
+        while ((sampleValue = node.sampleAccordingToRestrictions(sampleSoFar, valuePossibilities[node.name], bannedValues))) {
             sampleSoFar[node.name] = sampleValue;
 
             if (depth + 1 < this.nodesInSamplingOrder.length) {
-                if ((sample = this._recursivelyGenerateSampleWheneverPossible(sampleSoFar, valuePossibilities, depth + 1))) {
+                if ((sample = this._recursivelyGenerateConsistentSampleWhenPossible(sampleSoFar, valuePossibilities, depth + 1))) {
                     return sample;
                 }
             } else {
@@ -56,77 +74,6 @@ class BayesianNetwork {
         }
 
         return false;
-    }
-}
-
-class BayesianNode {
-    constructor(nodeDefinition) {
-        this.nodeDefinition = nodeDefinition;
-    }
-
-    _getProbabilitiesGivenKnownValues(knownValues = {}) {
-        let probabilities = this.nodeDefinition.conditionalProbabilities;
-
-        for (const parentName of this.parentNames) {
-            const parentValue = knownValues[parentName];
-            if (parentValue in probabilities.deeper) {
-                probabilities = probabilities.deeper[parentValue];
-            } else {
-                probabilities = probabilities.skip;
-            }
-        }
-        return probabilities;
-    }
-
-    _sampleRandomValueFromPossibilities(possibleValues, totalProbabilityOfPossibleValues, probabilities) {
-        let chosenValue = possibleValues[0];
-        const anchor = Math.random() * totalProbabilityOfPossibleValues;
-        let cumulativeProbability = 0;
-        for (const possibleValue of possibleValues) {
-            cumulativeProbability += probabilities[possibleValue];
-            if (cumulativeProbability > anchor) {
-                chosenValue = possibleValue;
-                break;
-            }
-        }
-
-        return chosenValue;
-    }
-
-    sample(knownValues = {}) {
-        const probabilities = this._getProbabilitiesGivenKnownValues(knownValues);
-        const possibleValues = Object.keys(probabilities);
-
-        return this._sampleRandomValueFromPossibilities(possibleValues, 1.0, probabilities);
-    }
-
-    sampleAccordingToRestrictions(parentValues, valuePossibilities, bannedValues) {
-        const probabilities = this._getProbabilitiesGivenKnownValues(parentValues);
-        let totalProbability = 0.0;
-        const validValues = [];
-        const valuesInDistribution = Object.keys(probabilities);
-        const possibleValues = this.name in valuePossibilities ? valuePossibilities[this.name] : valuesInDistribution;
-        for (const value of possibleValues) {
-            if (!bannedValues.includes(value) && valuesInDistribution.includes(value)) {
-                validValues.push(value);
-                totalProbability += probabilities[value];
-            }
-        }
-
-        if (validValues.length == 0) return false;
-        return this._sampleRandomValueFromPossibilities(validValues, totalProbability, probabilities);
-    }
-
-    get name() {
-        return this.nodeDefinition.name;
-    }
-
-    get possibleValues() {
-        return this.nodeDefinition.possibleValues;
-    }
-
-    get parentNames() {
-        return this.nodeDefinition.parentNames;
     }
 }
 
