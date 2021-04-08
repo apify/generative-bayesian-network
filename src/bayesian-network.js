@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { BayesianNode } = require('./bayesian-node');
 
 /**
@@ -58,12 +57,16 @@ class BayesianNetwork {
         const node = this.nodesInSamplingOrder[depth];
 
         let sampleValue;
-        let sample;
-        while ((sampleValue = node.sampleAccordingToRestrictions(sampleSoFar, valuePossibilities[node.name], bannedValues))) {
+        do {
+            sampleValue = node.sampleAccordingToRestrictions(sampleSoFar, valuePossibilities[node.name], bannedValues);
+
+            if (!sampleValue) break;
+
             sampleSoFar[node.name] = sampleValue;
 
             if (depth + 1 < this.nodesInSamplingOrder.length) {
-                if ((sample = this._recursivelyGenerateConsistentSampleWhenPossible(sampleSoFar, valuePossibilities, depth + 1))) {
+                const sample = this._recursivelyGenerateConsistentSampleWhenPossible(sampleSoFar, valuePossibilities, depth + 1);
+                if (sample) {
                     return sample;
                 }
             } else {
@@ -71,7 +74,7 @@ class BayesianNetwork {
             }
 
             bannedValues.push(sampleValue);
-        }
+        } while (sampleValue);
 
         return false;
     }
