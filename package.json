@@ -2,6 +2,7 @@
   "author": {
     "name": "Apify"
   },
+  "files": ["src"],
   "bugs": {
     "url": "https://github.com/apify/generative-bayesian-network/issues"
   },
