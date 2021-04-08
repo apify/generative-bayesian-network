@@ -85,7 +85,7 @@ class BayesianNode {
             }
         }
 
-        if (validValues.length == 0) return false;
+        if (validValues.length === 0) return false;
         return this._sampleRandomValueFromPossibilities(validValues, totalProbability, probabilities);
     }
 
