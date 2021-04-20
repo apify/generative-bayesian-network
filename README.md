@@ -148,7 +148,7 @@ Saves the network definition to the specified file path to be used later.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| networkDefinitionFilePath | <code>object</code> | a Danfo.js dataframe containing the data |
+| networkDefinitionFilePath | <code>string</code> | a file path where the network definition should be saved |
 
 
 * * *

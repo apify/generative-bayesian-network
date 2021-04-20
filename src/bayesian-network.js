@@ -96,7 +96,7 @@ class BayesianNetwork {
 
     /**
      * Saves the network definition to the specified file path to be used later.
-     * @param {object} networkDefinitionFilePath - a Danfo.js dataframe containing the data
+     * @param {string} networkDefinitionFilePath - a file path where the network definition should be saved
      */
     saveNetworkDefinition(networkDefinitionFilePath) {
         const network = {
