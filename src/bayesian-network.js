@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 const { BayesianNode } = require('./bayesian-node');
 
 /**
@@ -18,7 +20,6 @@ class BayesianNetwork {
 
     /**
      * Randomly samples from the distribution represented by the bayesian network.
-     * Can generate samples not found in the data used to create the definition file.
      * @param {object} inputValues - node values that are known already
      */
     generateSample(inputValues = {}) {
@@ -33,9 +34,9 @@ class BayesianNetwork {
     }
 
     /**
-     * Randomly samples from the distribution represented by the bayesian network.
-     * Cannot generate samples not found in the data used to create the definition file,
-     * so it only generates samples when it is possible to be consistent with the data.
+     * Randomly samples from the distribution represented by the bayesian network,
+     * making sure the sample is consistent with the provided restrictions on value possibilities.
+     * Returns false if no such sample can be generated.
      * @param {object} valuePossibilities - a dictionary of lists of possible values for nodes
      *                                      (if a node isn't present in the dictionary, all values are possible)
      */
@@ -44,7 +45,7 @@ class BayesianNetwork {
     }
 
     /**
-     * Randomly samples from the distribution represented by the bayesian network
+     * Recursively generates a random sample consistent with the given restrictions on possible values.
      * @param {object} sampleSoFar - node values that are known already
      * @param {object} valuePossibilities - a dictionary of lists of possible values for nodes
      *                                      (if a node isn't present in the dictionary, all values are possible)
@@ -77,6 +78,32 @@ class BayesianNetwork {
         } while (sampleValue);
 
         return false;
+    }
+
+    /**
+     * Sets the conditional probability distributions of this network's nodes to match the given data.
+     * @param {object} dataframe - a Danfo.js dataframe containing the data
+     */
+    setProbabilitiesAccordingToData(dataframe) {
+        this.nodesInSamplingOrder.forEach((node) => {
+            const possibleParentValues = {};
+            for (const parentName of node.parentNames) {
+                possibleParentValues[parentName] = this.nodesByName[parentName].possibleValues;
+            }
+            node.setProbabilitiesAccordingToData(dataframe, possibleParentValues);
+        });
+    }
+
+    /**
+     * Saves the network definition to the specified file path to be used later.
+     * @param {object} networkDefinitionFilePath - a Danfo.js dataframe containing the data
+     */
+    saveNetworkDefinition(networkDefinitionFilePath) {
+        const network = {
+            nodes: this.nodesInSamplingOrder.map((node) => node.nodeDefinition),
+        };
+
+        fs.writeFileSync(networkDefinitionFilePath, JSON.stringify(network));
     }
 }
 

@@ -2,7 +2,9 @@
   "author": {
     "name": "Apify"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "bugs": {
     "url": "https://github.com/apify/generative-bayesian-network/issues"
   },
@@ -16,7 +18,8 @@
     "fs-extra": "^9.1.0",
     "jest": "^26.6.3",
     "jsdoc-to-markdown": "^7.0.0",
-    "markdown-toc": "^1.2.0"
+    "markdown-toc": "^1.2.0",
+    "danfojs-node": "^0.2.2"
   },
   "homepage": "https://github.com/apify/generative-bayesian-network#readme",
   "license": "Apache-2.0",
