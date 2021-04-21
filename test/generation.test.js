@@ -10,8 +10,6 @@ describe.skipWindows('Setup test', () => {
     const dfd = require("danfojs-node");
     const fs = require("fs");
     const parse = require('csv-parse/lib/sync');
-
-    console.log(platform());
     let testGeneratorNetwork = new BayesianNetwork(testNetworkStructureDefinition);
 
     test('Calculates probabilities from data', () => {
