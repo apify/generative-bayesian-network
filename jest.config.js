@@ -5,4 +5,7 @@ module.exports = {
     verbose: true,
     rootDir: path.join(__dirname, './'),
     testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
+    setupFilesAfterEnv: [
+      "jest-os-detection"
+    ],
 };

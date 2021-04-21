@@ -6,22 +6,30 @@ const path = require("path");
 const { BayesianNetwork } = require('../src/main');
 const testNetworkStructureDefinition = require('./testNetworkStructureDefinition.json');
 
-describe('Generation tests', () => {
-    let testGeneratorNetwork = new BayesianNetwork(testNetworkStructureDefinition);
-    let records;
+const testNetworkDefinitionPath = path.join(__dirname, './testNetworkDefinition.json');
 
-    beforeAll(async (done) => {
+describe.skipWindows('Setup test', () => {
+    let testGeneratorNetwork = new BayesianNetwork(testNetworkStructureDefinition);
+
+    test('Calculates probabilities from data', () => {
         const datasetText = fs.readFileSync(path.join(__dirname, "./testDataset.csv"), {encoding:'utf8'}).replace(/^\ufeff/, '');
-        records = parse(datasetText, {
+        const records = parse(datasetText, {
             columns: true,
             skip_empty_lines: true
         });
-        let dataframe = new dfd.DataFrame(records);
+        const dataframe = new dfd.DataFrame(records);
         testGeneratorNetwork.setProbabilitiesAccordingToData(dataframe);
-        done();
+        testGeneratorNetwork.saveNetworkDefinition(testNetworkDefinitionPath);
+        expect(testGeneratorNetwork.generateSample()).toBeTruthy();
     });
+});
 
-    test('Sets up probability distributions from data and generates a sample', () => {
+const testNetworkDefinition = require(testNetworkDefinitionPath);
+
+describe('Generation tests', () => {
+    let testGeneratorNetwork = new BayesianNetwork(testNetworkDefinition);
+
+    test('Generates a sample', () => {
         expect(testGeneratorNetwork.generateSample()).toBeTruthy();
     });
 
