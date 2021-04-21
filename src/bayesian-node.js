@@ -9,7 +9,7 @@ function getRelativeFrequencies(dataframe, attributeName) {
     const totalCount = dataframe.shape[0];
     const valueCounts = dataframe[attributeName].value_counts();
 
-    for (const index in valueCounts.index) {
+    for (let index = 0; index < valueCounts.index.length; index++) {
         frequencies[valueCounts.index[index]] = valueCounts.values[index] / totalCount;
     }
 
