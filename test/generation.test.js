@@ -1,7 +1,5 @@
-const dfd = require("danfojs-node");
-const fs = require("fs");
-const parse = require('csv-parse/lib/sync');
 const path = require("path");
+const { platform } = require('os');
 
 const { BayesianNetwork } = require('../src/main');
 const testNetworkStructureDefinition = require('./testNetworkStructureDefinition.json');
@@ -9,6 +7,9 @@ const testNetworkStructureDefinition = require('./testNetworkStructureDefinition
 const testNetworkDefinitionPath = path.join(__dirname, './testNetworkDefinition.json');
 
 describe.skipWindows('Setup test', () => {
+    const dfd = require("danfojs-node");
+    const fs = require("fs");
+    const parse = require('csv-parse/lib/sync');
     let testGeneratorNetwork = new BayesianNetwork(testNetworkStructureDefinition);
 
     test('Calculates probabilities from data', () => {
