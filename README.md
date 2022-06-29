@@ -1,4 +1,11 @@
 # Generative bayesian network
+
+---
+
+DEPRECATED: The `generative-bayesian-network` package now lives in the [fingerprint-suite](https://github.com/apify/fingerprint-suite) repository. This repository is no longer actively maintained.
+
+---
+
 NodeJs package containing a bayesian network capable of randomly sampling from a distribution defined by a json object.
 
 <!-- toc -->
